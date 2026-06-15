@@ -4,16 +4,16 @@
     "github_conn_id": "dag_manager_github"
   },
   "github": {
-    "repository": "local/testing-dags",
+    "repository": "saitejaanagani/airflow_test",
     "branch": "main",
     "dag_path": "dags/generated"
   },
   "storage": {
-    "mode": "local",
-    "local_dag_path": "/opt/airflow/dags/generated"
+    "mode": "github",
+    "local_dag_path": "/opt/airflow/dags/repo/dags/generated"
   },
   "templates": {
-    "root": "/opt/airflow/dag-manager-templates"
+    "root": "/opt/airflow/dags/repo/templates"
   },
   "database": {
     "auto_create_schema": true
