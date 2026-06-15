@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+  {% if error %}<div class="dm-alert dm-alert-error">{{ error }}</div>{% endif %}
+
+  <section class="dm-panel">
+    <div class="dm-panel-header dm-form-heading">
+      <div>
+        <span class="dm-badge dm-badge-blue">{{ "CREATE" if mode == "create" else "EDIT" }}</span>
+        <h2>{{ definition.title }}</h2>
+        <p>{{ definition.description }}</p>
+      </div>
+      {% if managed_dag %}
+        <div class="dm-meta-box">
+          <span>DAG path</span>
+          <code>{{ managed_dag.github_path }}</code>
+        </div>
+      {% else %}
+        <div class="dm-meta-box">
+          <span>Selected flow</span>
+          <code>{{ definition.title }}</code>
+        </div>
+      {% endif %}
+    </div>
+
+    <form method="post" action="{{ url_for('create_dag') if mode == 'create' else url_for('update_dag', managed_dag_id=managed_dag.id) }}" class="dm-form" data-dag-form>
+      {% if mode == "create" %}<input type="hidden" name="template_key" value="{{ definition.key }}">{% endif %}
+
+      <div class="dm-section-nav" role="tablist">
+        {% for section in definition.ordered_sections() %}
+          <button type="button" class="dm-section-tab {% if loop.first %}is-active{% endif %}" data-section-target="{{ section.key }}">
+            {{ section.title }}
+          </button>
+        {% endfor %}
+      </div>
+
+      {% for section in definition.ordered_sections() %}
+        <fieldset class="dm-form-section {% if not loop.first %}is-hidden{% endif %}" data-section="{{ section.key }}">
+          <legend>{{ section.title }}</legend>
+          {% if section.description %}<p class="dm-section-description">{{ section.description }}</p>{% endif %}
+          <div class="dm-field-grid">
+            {% for key, field in definition.fields_for_section(section.key) %}
+              <div class="dm-field {% if field.type in ['text', 'json'] %}dm-field-wide{% endif %}">
+                <label for="{{ key }}">
+                  {{ field.title or key }}
+                  {% if field.required %}<span class="dm-required">*</span>{% endif %}
+                </label>
+
+                {% set value = values.get(key, field.get('default')) %}
+                {% if field.type == "boolean" %}
+                  <label class="dm-toggle">
+                    <input id="{{ key }}" name="{{ key }}" type="checkbox" {% if value %}checked{% endif %} {% if field.required %}data-required="true"{% endif %}>
+                    <span>Enabled</span>
+                  </label>
+                {% elif field.type == "select" %}
+                  <select id="{{ key }}" name="{{ key }}" {% if field.required %}data-required="true"{% endif %}>
+                    {% for option in field.options %}
+                      {% set option_value = option.value if option is mapping else option %}
+                      {% set option_label = option.label if option is mapping else option %}
+                      <option value="{{ option_value }}" {% if value == option_value %}selected{% endif %}>{{ option_label }}</option>
+                    {% endfor %}
+                  </select>
+                {% elif field.type in ["text", "json"] %}
+                  <textarea id="{{ key }}" name="{{ key }}" rows="{{ field.get('rows', 4) }}" {% if field.required %}data-required="true"{% endif %}>{{ value if value is not none else '' }}</textarea>
+                {% else %}
+                  <input
+                    id="{{ key }}"
+                    name="{{ key }}"
+                    type="{{ 'number' if field.type in ['integer', 'number'] else 'text' }}"
+                    value="{{ value if value is not none else '' }}"
+                    {% if field.type == 'number' %}step="any"{% endif %}
+                    {% if field.type == 'integer' %}step="1"{% endif %}
+                    {% if field.get('minimum') is not none %}min="{{ field.minimum }}"{% endif %}
+                    {% if field.get('maximum') is not none %}max="{{ field.maximum }}"{% endif %}
+                    {% if field.get('pattern') %}pattern="{{ field.pattern }}"{% endif %}
+                    {% if field.required %}data-required="true"{% endif %}
+                  >
+                {% endif %}
+
+                {% if field.description %}<small>{{ field.description }}</small>{% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+      {% endfor %}
+
+      <div class="dm-form-actions">
+        <a class="dm-button dm-button-secondary" href="{{ url_for('dashboard') }}">Cancel</a>
+        <button class="dm-button dm-button-primary" type="submit" data-submit-dag>
+          {{ "Create DAG" if mode == "create" else "Save changes" }}
+        </button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,158 @@
+{
+  "template": {
+    "key": "s3_to_s3_dag_template",
+    "title": "S3 to S3 Transfer DAG",
+    "description": "Create a configurable S3-to-S3 transfer DAG from an approved template."
+  },
+  "sections": [
+    {
+      "key": "dag_configuration",
+      "title": "DAG Configuration",
+      "description": "Identity, ownership, and scheduling.",
+      "order": 10
+    },
+    {
+      "key": "source_configuration",
+      "title": "Source Configuration",
+      "description": "Source S3 location and connection.",
+      "order": 20
+    },
+    {
+      "key": "target_configuration",
+      "title": "Target Configuration",
+      "description": "Destination S3 location and connection.",
+      "order": 30
+    },
+    {
+      "key": "advanced_configuration",
+      "title": "Advanced Configuration",
+      "description": "Retries, validation, and notifications.",
+      "order": 40
+    }
+  ],
+  "variables": {
+    "dag_id": {
+      "default": "s3_to_s3_example",
+      "type": "string",
+      "title": "DAG ID",
+      "description": "Unique Airflow DAG identifier.",
+      "section": "dag_configuration",
+      "required": true,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,249}$",
+      "pattern_message": "Begin with a letter and use letters, numbers, underscore, dot, or hyphen.",
+      "order": 10
+    },
+    "schedule": {
+      "default": "@daily",
+      "type": "string",
+      "title": "Schedule",
+      "description": "Cron expression, preset, or leave blank for manual-only.",
+      "section": "dag_configuration",
+      "required": false,
+      "order": 20
+    },
+    "owner": {
+      "default": "data-platform",
+      "type": "string",
+      "title": "Owner",
+      "description": "Business or engineering owner.",
+      "section": "dag_configuration",
+      "required": true,
+      "order": 30
+    },
+    "source_aws_conn_id": {
+      "default": "aws_default",
+      "type": "string",
+      "title": "Source AWS Connection ID",
+      "description": "Airflow connection for source S3 access.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 10
+    },
+    "source_bucket": {
+      "default": "source-bucket",
+      "type": "string",
+      "title": "Source S3 Bucket",
+      "description": "Source bucket name without s3://.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 20
+    },
+    "source_prefix": {
+      "default": "incoming/",
+      "type": "string",
+      "title": "Source Prefix",
+      "description": "Optional source key prefix.",
+      "section": "source_configuration",
+      "required": false,
+      "order": 30
+    },
+    "target_aws_conn_id": {
+      "default": "aws_default",
+      "type": "string",
+      "title": "Target AWS Connection ID",
+      "description": "Airflow connection for destination S3 access.",
+      "section": "target_configuration",
+      "required": true,
+      "order": 10
+    },
+    "target_bucket": {
+      "default": "target-bucket",
+      "type": "string",
+      "title": "Target S3 Bucket",
+      "description": "Destination bucket name without s3://.",
+      "section": "target_configuration",
+      "required": true,
+      "order": 20
+    },
+    "target_prefix": {
+      "default": "archive/",
+      "type": "string",
+      "title": "Target Prefix",
+      "description": "Destination key prefix.",
+      "section": "target_configuration",
+      "required": false,
+      "order": 30
+    },
+    "notification_emails": {
+      "default": "saiteja.anagani@abbvie.com,thrishul.ramoju@abbvie.com",
+      "type": "string",
+      "title": "Notification Emails",
+      "description": "Comma-separated email recipients.",
+      "section": "advanced_configuration",
+      "required": false,
+      "order": 10
+    },
+    "max_allowed_failure_ratio": {
+      "default": 0.0,
+      "type": "number",
+      "title": "Max Allowed Failure Ratio",
+      "description": "0.0 means any failed file fails the DAG.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "order": 20
+    },
+    "max_parallel_ingestion": {
+      "default": 10,
+      "type": "integer",
+      "title": "Max Parallel Ingestion",
+      "description": "Maximum number of transfer tasks running in parallel.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 1,
+      "maximum": 500,
+      "order": 30
+    },
+    "dry_run": {
+      "default": false,
+      "type": "boolean",
+      "title": "Dry Run",
+      "description": "Generate and inspect actions without transferring objects.",
+      "section": "advanced_configuration",
+      "required": false,
+      "order": 40
+    }
+  }
+}

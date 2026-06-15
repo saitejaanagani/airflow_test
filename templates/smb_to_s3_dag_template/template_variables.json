@@ -1,0 +1,198 @@
+{
+  "template": {
+    "key": "smb_to_s3_dag_template",
+    "title": "SMB to S3 Transfer DAG",
+    "description": "Create a configurable SMB/NAS-to-S3 archival DAG from an approved template."
+  },
+  "sections": [
+    {
+      "key": "dag_configuration",
+      "title": "DAG Configuration",
+      "description": "Identity, ownership, and scheduling.",
+      "order": 10
+    },
+    {
+      "key": "source_configuration",
+      "title": "SMB Source Configuration",
+      "description": "NAS share, source connection, and path.",
+      "order": 20
+    },
+    {
+      "key": "target_configuration",
+      "title": "S3 Target Configuration",
+      "description": "Destination bucket and prefix.",
+      "order": 30
+    },
+    {
+      "key": "advanced_configuration",
+      "title": "Advanced Configuration",
+      "description": "Eligibility, batching, failures, and notifications.",
+      "order": 40
+    }
+  ],
+  "variables": {
+    "dag_id": {
+      "default": "smb_to_s3_example",
+      "type": "string",
+      "title": "DAG ID",
+      "description": "Unique Airflow DAG identifier.",
+      "section": "dag_configuration",
+      "required": true,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,249}$",
+      "pattern_message": "Begin with a letter and use letters, numbers, underscore, dot, or hyphen.",
+      "order": 10
+    },
+    "schedule": {
+      "default": null,
+      "type": "string",
+      "title": "Schedule",
+      "description": "Cron expression or preset. Leave blank for manual-only.",
+      "section": "dag_configuration",
+      "required": false,
+      "order": 20
+    },
+    "owner": {
+      "default": "pcs-data-platform",
+      "type": "string",
+      "title": "Owner",
+      "description": "Business or engineering owner.",
+      "section": "dag_configuration",
+      "required": true,
+      "order": 30
+    },
+    "source_name": {
+      "default": "pcs_smb_source",
+      "type": "string",
+      "title": "Source Name",
+      "description": "Logical source identifier used in audit records.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 10
+    },
+    "source_conn_id": {
+      "default": "smb_default",
+      "type": "string",
+      "title": "SMB Connection ID",
+      "description": "Airflow connection that provides SMB credentials.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 20
+    },
+    "source_share": {
+      "default": "data",
+      "type": "string",
+      "title": "Source Share",
+      "description": "SMB share name.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 30
+    },
+    "source_path": {
+      "default": "incoming",
+      "type": "string",
+      "title": "Source Path",
+      "description": "Folder below the SMB share.",
+      "section": "source_configuration",
+      "required": true,
+      "order": 40
+    },
+    "target_aws_conn_id": {
+      "default": "aws_default",
+      "type": "string",
+      "title": "Target AWS Connection ID",
+      "description": "Airflow connection for S3 access.",
+      "section": "target_configuration",
+      "required": true,
+      "order": 10
+    },
+    "target_s3_bucket": {
+      "default": "archive-bucket",
+      "type": "string",
+      "title": "Target S3 Bucket",
+      "description": "Destination S3 bucket without s3://.",
+      "section": "target_configuration",
+      "required": true,
+      "order": 20
+    },
+    "target_s3_key_prefix": {
+      "default": "pcs/archive/",
+      "type": "string",
+      "title": "Target S3 Prefix",
+      "description": "Destination key prefix while preserving hierarchy.",
+      "section": "target_configuration",
+      "required": false,
+      "order": 30
+    },
+    "postgres_conn_id": {
+      "default": "postgres_default",
+      "type": "string",
+      "title": "Postgres Connection ID",
+      "description": "Airflow connection for PCS audit tables.",
+      "section": "advanced_configuration",
+      "required": true,
+      "order": 10
+    },
+    "notification_emails": {
+      "default": "saiteja.anagani@abbvie.com,thrishul.ramoju@abbvie.com",
+      "type": "string",
+      "title": "Notification Emails",
+      "description": "Comma-separated email recipients.",
+      "section": "advanced_configuration",
+      "required": false,
+      "order": 20
+    },
+    "eligibility_check_interval": {
+      "default": 100,
+      "type": "integer",
+      "title": "Eligibility Check Interval",
+      "description": "Delay in seconds between file stability checks.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 1,
+      "maximum": 86400,
+      "order": 30
+    },
+    "max_allowed_failure_ratio": {
+      "default": 0.0,
+      "type": "number",
+      "title": "Max Allowed Failure Ratio",
+      "description": "0.0 means any failed file fails the DAG.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "order": 40
+    },
+    "max_parallel_ingestion": {
+      "default": 20,
+      "type": "integer",
+      "title": "Max Parallel Ingestion",
+      "description": "Maximum mapped transfer tasks allowed to run concurrently.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 1,
+      "maximum": 500,
+      "order": 50
+    },
+    "max_total_batches": {
+      "default": 100,
+      "type": "integer",
+      "title": "Max Total Batches",
+      "description": "Upper bound on total generated file batches.",
+      "section": "advanced_configuration",
+      "required": true,
+      "minimum": 1,
+      "maximum": 5000,
+      "order": 60
+    },
+    "dry_run": {
+      "default": false,
+      "type": "boolean",
+      "title": "Dry Run",
+      "description": "Run discovery and validation without uploading files.",
+      "section": "advanced_configuration",
+      "required": false,
+      "order": 70
+    }
+  }
+}

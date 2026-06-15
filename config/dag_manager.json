@@ -1,0 +1,21 @@
+{
+  "connections": {
+    "postgres_conn_id": "dag_manager_postgres",
+    "github_conn_id": "dag_manager_github"
+  },
+  "github": {
+    "repository": "local/testing-dags",
+    "branch": "main",
+    "dag_path": "dags/generated"
+  },
+  "storage": {
+    "mode": "local",
+    "local_dag_path": "/opt/airflow/dags/generated"
+  },
+  "templates": {
+    "root": "/opt/airflow/dag-manager-templates"
+  },
+  "database": {
+    "auto_create_schema": true
+  }
+}

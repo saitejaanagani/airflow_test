@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="dm-panel dm-error-panel">
+    <div class="dm-error-symbol">!</div>
+    <h2>{{ title }}</h2>
+    <p>{{ error }}</p>
+    <a class="dm-button dm-button-secondary" href="{{ url_for('dashboard') }}">Return to dashboard</a>
+  </section>
+{% endblock %}

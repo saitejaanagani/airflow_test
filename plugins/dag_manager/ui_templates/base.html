@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('dag_manager_static', path='dag_manager.css') }}?v=2">
+</head>
+<body>
+  <div class="dm-shell">
+    <header class="dm-header">
+      <div>
+        <div class="dm-eyebrow">AIRFLOW EXTENSION</div>
+        <h1>{{ app_name }}</h1>
+        <p>Create governed Airflow DAG files from approved templates.</p>
+      </div>
+      <a class="dm-button dm-button-secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('dag_manager_static', path='dag_manager.js') }}?v=2"></script>
+</body>
+</html>
