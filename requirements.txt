@@ -1,0 +1,4 @@
+apache-airflow-providers-github
+apache-airflow-providers-postgres
+
+airflow-dag-manager-plugin @ git+https://github.com/saitejaanagani/airflow_test.git@main#subdirectory=plugins/dag-manager-airflow-plugin

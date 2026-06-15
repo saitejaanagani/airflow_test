@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_CONFIG_FILENAME = "dag_manager.json"
-DEFAULT_REPO_PATH = "/opt/airflow/dags/repo/"
+DEFAULT_REPO_PATH = Path("/opt/airflow/dags/repo/")
 
 
 class ConfigurationError(RuntimeError):
@@ -46,6 +46,10 @@ def resolve_config_path(config_file: str | Path | None = None) -> Path:
 
     if config_file:
         return Path(config_file).expanduser().resolve()
+
+    env_value = os.getenv("DAG_MANAGER_CONFIG_PATH", "").strip()
+    if env_value:
+        return Path(env_value).expanduser().resolve()
 
     configured = _path_from_airflow_config()
     if configured:
