@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_CONFIG_FILENAME = "dag_manager.json"
+DEFAULT_REPO_PATH = "/opt/airflow/dags/repo/"
 
 
 class ConfigurationError(RuntimeError):
@@ -50,7 +51,7 @@ def resolve_config_path(config_file: str | Path | None = None) -> Path:
     if configured:
         return configured
 
-    return (_default_airflow_home() / "config" / DEFAULT_CONFIG_FILENAME).resolve()
+    return (DEFAULT_REPO_PATH / "config" / DEFAULT_CONFIG_FILENAME).resolve()
 
 
 def _mapping(value: Any, key: str) -> dict[str, Any]:
@@ -94,8 +95,7 @@ class Settings:
     github_repository: str
     github_branch: str
     github_dag_path: str
-    storage_mode: str
-    local_dag_path: Path
+    github_api_url: str
     template_root: Path | None
     auto_create_schema: bool
 
@@ -120,7 +120,6 @@ class Settings:
 
         connections = _mapping(document.get("connections"), "connections")
         github = _mapping(document.get("github"), "github")
-        storage = _mapping(document.get("storage"), "storage")
         templates = _mapping(document.get("templates"), "templates")
         database = _mapping(document.get("database"), "database")
 
@@ -132,53 +131,27 @@ class Settings:
                 candidate = path.parent / candidate
             template_root = candidate.resolve()
 
-        storage_mode = cls._storage_mode(storage.get("mode"))
-
         return cls(
             config_file=path,
             postgres_conn_id=_required_string(
                 connections.get("postgres_conn_id"), "connections.postgres_conn_id"
             ),
-            github_conn_id=(
-                _required_string(connections.get("github_conn_id"), "connections.github_conn_id")
-                if storage_mode == "github"
-                else _optional_string(connections.get("github_conn_id"))
-            ),
-            github_repository=(
-                _required_string(github.get("repository"), "github.repository")
-                if storage_mode == "github"
-                else _optional_string(github.get("repository"))
-            ),
+            github_conn_id=_required_string(connections.get("github_conn_id"), "connections.github_conn_id"),
+            github_repository=_required_string(github.get("repository"), "github.repository"),
             github_branch=_optional_string(github.get("branch"), "main") or "main",
             github_dag_path=_optional_string(github.get("dag_path"), "dags/generated").strip("/"),
-            storage_mode=storage_mode,
-            local_dag_path=cls._local_dag_path(path, storage.get("local_dag_path")),
+            github_api_url=(
+                _optional_string(github.get("api_url"), "https://api.github.com") or "https://api.github.com"
+            ).rstrip("/"),
             template_root=template_root,
             auto_create_schema=_as_bool(database.get("auto_create_schema"), default=False),
         )
-
-    @staticmethod
-    def _storage_mode(value: Any) -> str:
-        mode = _optional_string(value, "local").lower() or "local"
-        if mode not in {"local", "github"}:
-            raise ConfigurationError("storage.mode must be either 'local' or 'github'.")
-        return mode
-
-    @staticmethod
-    def _local_dag_path(config_path: Path, value: Any) -> Path:
-        raw = _optional_string(value, "/opt/airflow/dags/generated")
-        candidate = Path(raw).expanduser()
-        if not candidate.is_absolute():
-            candidate = config_path.parent / candidate
-        return candidate.resolve()
 
     def require_database(self) -> None:
         if not self.postgres_conn_id:
             raise ConfigurationError("connections.postgres_conn_id is not configured.")
 
     def require_github(self) -> None:
-        if self.storage_mode != "github":
-            return
         missing: list[str] = []
         if not self.github_conn_id:
             missing.append("connections.github_conn_id")

@@ -13,24 +13,41 @@
       <strong>{{ available_templates | length }}</strong>
     </div>
     <div class="dm-stat-card dm-stat-card-wide">
-      <span>DAG destination</span>
-      {% if storage_mode == "local" %}
-        <strong class="dm-stat-small">{{ local_dag_path }}</strong>
-        <small>Mode: Local</small>
-      {% else %}
-        <strong class="dm-stat-small">{{ repository or "Not configured" }}</strong>
-        <small>Mode: GitHub / Branch: {{ branch }}</small>
-      {% endif %}
+      <span>GitHub destination</span>
+      <strong class="dm-stat-small">{{ repository or "Not configured" }}</strong>
+      <small>Branch: {{ branch }}</small>
     </div>
   </section>
 
-  <section class="dm-panel dm-managed-panel">
+  <section class="dm-panel">
+    <div class="dm-panel-header">
+      <div>
+        <h2>Create a DAG</h2>
+        <p>Select one of the approved template types.</p>
+      </div>
+    </div>
+    <div class="dm-template-grid">
+      {% for template in available_templates %}
+        <a class="dm-template-card" href="{{ url_for('new_dag') }}?template_key={{ template.key }}">
+          <span class="dm-template-icon">{{ loop.index }}</span>
+          <div>
+            <h3>{{ template.title }}</h3>
+            <p>{{ template.description }}</p>
+            <span class="dm-link-label">Configure DAG →</span>
+          </div>
+        </a>
+      {% else %}
+        <div class="dm-empty">No template folders were discovered.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="dm-panel">
     <div class="dm-panel-header">
       <div>
         <h2>Managed DAGs</h2>
         <p>DAG files created or edited through DAG Manager.</p>
       </div>
-      <button class="dm-button dm-button-primary" type="button" data-open-create-modal>Create A DAG</button>
     </div>
     <div class="dm-table-wrap">
       <table class="dm-table">
@@ -38,7 +55,7 @@
           <tr>
             <th>DAG ID</th>
             <th>Template</th>
-            <th>DAG path</th>
+            <th>GitHub path</th>
             <th>State</th>
             <th>Last updated</th>
             <th></th>
@@ -61,30 +78,4 @@
       </table>
     </div>
   </section>
-
-  <div class="dm-modal-backdrop" data-create-modal hidden>
-    <section class="dm-modal" role="dialog" aria-modal="true" aria-labelledby="create-flow-title">
-      <div class="dm-modal-header">
-        <div>
-          <h2 id="create-flow-title">Create A DAG</h2>
-          <p>Choose the flow for this DAG.</p>
-        </div>
-        <button class="dm-icon-button" type="button" data-close-create-modal aria-label="Close">x</button>
-      </div>
-      <div class="dm-template-grid dm-template-grid-modal">
-        {% for template in available_templates %}
-          <a class="dm-template-card" href="{{ url_for('new_dag') }}?template_key={{ template.key }}">
-            <span class="dm-template-icon">{{ loop.index }}</span>
-            <div>
-              <h3>{{ template.title }}</h3>
-              <p>{{ template.description }}</p>
-              <span class="dm-link-label">Select flow</span>
-            </div>
-          </a>
-        {% else %}
-          <div class="dm-empty">No template folders were discovered.</div>
-        {% endfor %}
-      </div>
-    </section>
-  </div>
 {% endblock %}

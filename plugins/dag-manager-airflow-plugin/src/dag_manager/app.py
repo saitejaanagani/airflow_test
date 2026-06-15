@@ -49,16 +49,6 @@ def _maybe_init_schema(settings: Settings) -> None:
         init_schema(settings)
 
 
-def _create_values(definition) -> dict[str, Any]:
-    values: dict[str, Any] = {}
-    for key, spec in definition.variables.items():
-        if spec.get("section") == "advanced_configuration":
-            values[key] = spec.get("default")
-        else:
-            values[key] = None
-    return values
-
-
 @app.get("/", response_class=HTMLResponse, name="dashboard")
 def dashboard(request: Request, message: str | None = None, error: str | None = None):
     settings = Settings.from_file()
@@ -79,8 +69,6 @@ def dashboard(request: Request, message: str | None = None, error: str | None = 
                 error=error,
                 repository=settings.github_repository,
                 branch=settings.github_branch,
-                storage_mode=settings.storage_mode,
-                local_dag_path=settings.local_dag_path,
             ),
         )
     except Exception as exc:
@@ -107,7 +95,7 @@ def new_dag(request: Request, template_key: str | None = None):
             status_code=404,
         )
     definition = catalog.get(selected_key)
-    values = _create_values(definition)
+    values = {key: spec.get("default") for key, spec in definition.variables.items()}
     return templates.TemplateResponse(
         request=request,
         name="dag_form.html",
@@ -136,12 +124,7 @@ async def create_dag(request: Request):
         _maybe_init_schema(settings)
         with session_scope(settings) as session:
             result = DagManagerService(session, settings).create(template_key, form, _actor(request))
-        if settings.storage_mode == "github":
-            message = quote_plus(
-                f"Created {result.managed_dag.dag_id} in GitHub commit {result.github.commit_sha or 'unknown'}."
-            )
-        else:
-            message = quote_plus(f"Created {result.managed_dag.dag_id} locally at {result.github.html_url}.")
+        message = quote_plus(f"Created {result.managed_dag.dag_id} in GitHub commit {result.github.commit_sha or 'unknown'}.")
         return RedirectResponse(url=f"{request.url_for('dashboard')}?message={message}", status_code=303)
     except Exception as exc:
         log.exception("Failed to create managed DAG")
@@ -199,12 +182,7 @@ async def update_dag(request: Request, managed_dag_id: int):
             service = DagManagerService(session, settings)
             managed_dag = service.get_dag(managed_dag_id)
             result = service.update(managed_dag_id, form, _actor(request))
-        if settings.storage_mode == "github":
-            message = quote_plus(
-                f"Updated {result.managed_dag.dag_id} in GitHub commit {result.github.commit_sha or 'unknown'}."
-            )
-        else:
-            message = quote_plus(f"Updated {result.managed_dag.dag_id} locally at {result.github.html_url}.")
+        message = quote_plus(f"Updated {result.managed_dag.dag_id} in GitHub commit {result.github.commit_sha or 'unknown'}.")
         return RedirectResponse(url=f"{request.url_for('dashboard')}?message={message}", status_code=303)
     except Exception as exc:
         log.exception("Failed to update managed DAG")
@@ -235,8 +213,6 @@ def health():
     return {
         "status": "ok",
         "templates": [template.key for template in catalog.list_templates()],
-        "storage_mode": settings.storage_mode,
-        "local_dag_path": str(settings.local_dag_path),
         "github_repository": settings.github_repository or None,
         "github_branch": settings.github_branch,
     }

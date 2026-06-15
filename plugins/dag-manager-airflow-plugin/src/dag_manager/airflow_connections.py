@@ -31,35 +31,15 @@ def get_airflow_connection(conn_id: str) -> Any:
 @dataclass(frozen=True)
 class GitHubCredentials:
     token: str
-    api_url: str
 
 
 def get_github_credentials(conn_id: str) -> GitHubCredentials:
     connection = get_airflow_connection(conn_id)
     extras = getattr(connection, "extra_dejson", {}) or {}
-    conn_type = str(getattr(connection, "conn_type", "") or "").strip().lower()
-    if conn_type and conn_type != "github":
-        raise AirflowConnectionError(
-            f"Airflow Connection '{conn_id}' must use connection type 'github', not '{conn_type}'."
-        )
-    access_token = str(getattr(connection, "password", None) or extras.get("token") or "").strip()
-    host = str(getattr(connection, "host", None) or extras.get("api_url") or extras.get("github_api_url") or "").strip()
-    api_url = _normalize_api_url(
-        host
-        or "https://api.github.com"
-    )
-    if not access_token:
+    token = str(getattr(connection, "password", None) or extras.get("token") or "").strip()
+    if not token:
         raise AirflowConnectionError(
             f"Airflow Connection '{conn_id}' does not contain a GitHub token. "
             "Store the token in the Connection password field."
         )
-    return GitHubCredentials(token=access_token, api_url=api_url)
-
-
-def _normalize_api_url(value: Any) -> str:
-    api_url = str(value or "").strip().rstrip("/")
-    if not api_url:
-        return "https://api.github.com"
-    if not api_url.startswith(("http://", "https://")):
-        api_url = f"https://{api_url}"
-    return api_url
+    return GitHubCredentials(token=token)

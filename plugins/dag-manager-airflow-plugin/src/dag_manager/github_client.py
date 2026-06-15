@@ -23,7 +23,7 @@ class GitHubClient:
         credentials = get_github_credentials(settings.github_conn_id)
         self.settings = settings
         self.client = httpx.Client(
-            base_url=credentials.api_url,
+            base_url=settings.github_api_url,
             timeout=30.0,
             headers={
                 "Accept": "application/vnd.github+json",
