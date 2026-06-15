@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from airflow.configuration import conf
 
 DEFAULT_CONFIG_FILENAME = "dag_manager.json"
 DEFAULT_REPO_PATH = Path("/opt/airflow/dags/repo/")
@@ -93,18 +94,84 @@ def _as_bool(value: Any, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    config_file: Path
+    config_file: Path | None
+
     postgres_conn_id: str
     github_conn_id: str
+
     github_repository: str
     github_branch: str
     github_dag_path: str
     github_api_url: str
+
+    storage_mode: str
+    local_dag_path: Path | None
+
     template_root: Path | None
     auto_create_schema: bool
 
     @classmethod
+    def from_airflow_config(cls) -> "Settings | None":
+        section = "dag_manager"
+
+        if not conf.has_section(section):
+            return None
+
+        def get_required(key: str) -> str:
+            value = conf.get(section, key, fallback="").strip()
+            if not value:
+                raise ConfigurationError(f"Missing required [{section}] {key}")
+            return value
+
+        def get_optional(key: str, default: str | None = None) -> str | None:
+            value = conf.get(section, key, fallback=default)
+            if value is None:
+                return None
+            value = str(value).strip()
+            return value or default
+
+        def get_bool(key: str, default: bool = False) -> bool:
+            return conf.getboolean(section, key, fallback=default)
+
+        storage_mode = (get_optional("storage_mode", "github") or "github").lower()
+        if storage_mode not in {"github", "local"}:
+            raise ConfigurationError(
+                "[dag_manager] storage_mode must be either 'github' or 'local'."
+            )
+
+        local_dag_path_raw = get_optional(
+            "local_dag_path",
+            "/opt/airflow/dags/repo/dags/generated",
+        )
+        local_dag_path = Path(local_dag_path_raw).resolve() if local_dag_path_raw else None
+
+        templates_root_raw = get_optional("templates_root")
+        template_root = Path(templates_root_raw).resolve() if templates_root_raw else None
+
+        return cls(
+            config_file=None,
+
+            postgres_conn_id=get_required("postgres_conn_id"),
+            github_conn_id=get_required("github_conn_id"),
+
+            github_repository=get_required("github_repository"),
+            github_branch=get_optional("github_branch", "main") or "main",
+            github_dag_path=(get_optional("github_dag_path", "dags/generated") or "dags/generated").strip("/"),
+            github_api_url=(get_optional("github_api_url", "https://api.github.com") or "https://api.github.com").rstrip("/"),
+
+            storage_mode=storage_mode,
+            local_dag_path=local_dag_path,
+
+            template_root=template_root,
+            auto_create_schema=get_bool("auto_create_schema", False),
+        )
+
+    @classmethod
     def from_file(cls, config_file: str | Path | None = None) -> "Settings":
+        settings_from_airflow = cls.from_airflow_config()
+        if settings_from_airflow:
+            return settings_from_airflow
+        
         path = resolve_config_path(config_file)
         if not path.is_file():
             raise ConfigurationError(
