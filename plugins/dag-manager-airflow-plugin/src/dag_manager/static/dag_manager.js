@@ -1,9 +1,9 @@
 (() => {
-  const switcher = document.querySelector("[data-template-switcher]");
-  if (switcher) {
-    switcher.addEventListener("change", () => {
-      const target = switcher.dataset.newUrl;
-      window.location.href = `${target}?template_key=${encodeURIComponent(switcher.value)}`;
+  const templateToggle = document.querySelector("[data-template-menu-toggle]");
+  const templateMenu = document.querySelector("[data-template-menu]");
+  if (templateToggle && templateMenu) {
+    templateToggle.addEventListener("click", () => {
+      templateMenu.classList.toggle("is-hidden");
     });
   }
 
@@ -18,4 +18,16 @@
       if (selected) selected.classList.remove("is-hidden");
     });
   });
+
+  const form = document.querySelector("[data-dag-form]");
+  const submitButton = document.querySelector("[data-submit-button]");
+  if (form && submitButton) {
+    const syncSubmitState = () => {
+      submitButton.disabled = !form.checkValidity();
+    };
+
+    form.addEventListener("input", syncSubmitState);
+    form.addEventListener("change", syncSubmitState);
+    syncSubmitState();
+  }
 })();

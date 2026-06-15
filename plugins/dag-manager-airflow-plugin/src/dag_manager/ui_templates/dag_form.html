@@ -17,18 +17,7 @@
       {% endif %}
     </div>
 
-    {% if mode == "create" and available_templates | length > 1 %}
-      <div class="dm-template-switcher">
-        <label for="template-switcher">Template</label>
-        <select id="template-switcher" data-template-switcher data-new-url="{{ url_for('new_dag') }}">
-          {% for template in available_templates %}
-            <option value="{{ template.key }}" {% if template.key == definition.key %}selected{% endif %}>{{ template.title }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    {% endif %}
-
-    <form method="post" action="{{ url_for('create_dag') if mode == 'create' else url_for('update_dag', managed_dag_id=managed_dag.id) }}" class="dm-form">
+    <form method="post" action="{{ url_for('create_dag') if mode == 'create' else url_for('update_dag', managed_dag_id=managed_dag.id) }}" class="dm-form" data-dag-form>
       {% if mode == "create" %}<input type="hidden" name="template_key" value="{{ definition.key }}">{% endif %}
 
       <div class="dm-section-nav" role="tablist">
@@ -59,6 +48,7 @@
                   </label>
                 {% elif field.type == "select" %}
                   <select id="{{ key }}" name="{{ key }}" {% if field.required %}required{% endif %}>
+                    {% if value is none or value == '' %}<option value="" selected></option>{% endif %}
                     {% for option in field.options %}
                       {% set option_value = option.value if option is mapping else option %}
                       {% set option_label = option.label if option is mapping else option %}
@@ -91,8 +81,8 @@
 
       <div class="dm-form-actions">
         <a class="dm-button dm-button-secondary" href="{{ url_for('dashboard') }}">Cancel</a>
-        <button class="dm-button dm-button-primary" type="submit">
-          {{ "Create DAG in GitHub" if mode == "create" else "Save changes to GitHub" }}
+        <button class="dm-button dm-button-primary" type="submit" data-submit-button>
+          {{ "Create DAG" if mode == "create" else "Save changes to GitHub" }}
         </button>
       </div>
     </form>

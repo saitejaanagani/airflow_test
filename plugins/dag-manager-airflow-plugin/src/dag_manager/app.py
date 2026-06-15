@@ -95,7 +95,10 @@ def new_dag(request: Request, template_key: str | None = None):
             status_code=404,
         )
     definition = catalog.get(selected_key)
-    values = {key: spec.get("default") for key, spec in definition.variables.items()}
+    values = {}
+    for section in definition.ordered_sections():
+        for key, spec in definition.fields_for_section(section["key"]):
+            values[key] = spec.get("default") if section["key"] == "advanced_configuration" else None
     return templates.TemplateResponse(
         request=request,
         name="dag_form.html",

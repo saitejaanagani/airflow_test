@@ -22,33 +22,36 @@
   <section class="dm-panel">
     <div class="dm-panel-header">
       <div>
-        <h2>Create a DAG</h2>
-        <p>Select one of the approved template types.</p>
-      </div>
-    </div>
-    <div class="dm-template-grid">
-      {% for template in available_templates %}
-        <a class="dm-template-card" href="{{ url_for('new_dag') }}?template_key={{ template.key }}">
-          <span class="dm-template-icon">{{ loop.index }}</span>
-          <div>
-            <h3>{{ template.title }}</h3>
-            <p>{{ template.description }}</p>
-            <span class="dm-link-label">Configure DAG →</span>
-          </div>
-        </a>
-      {% else %}
-        <div class="dm-empty">No template folders were discovered.</div>
-      {% endfor %}
-    </div>
-  </section>
-
-  <section class="dm-panel">
-    <div class="dm-panel-header">
-      <div>
         <h2>Managed DAGs</h2>
         <p>DAG files created or edited through DAG Manager.</p>
       </div>
+      <button
+        class="dm-button dm-button-primary"
+        type="button"
+        data-template-menu-toggle
+        {% if not available_templates %}disabled{% endif %}
+      >
+        Create a DAG
+      </button>
     </div>
+
+    <div class="dm-template-menu is-hidden" data-template-menu>
+      <div class="dm-template-menu-header">
+        <strong>Select a template</strong>
+      </div>
+      <div class="dm-template-list">
+        {% for template in available_templates %}
+          <a class="dm-template-row" href="{{ url_for('new_dag') }}?template_key={{ template.key }}">
+            <span class="dm-template-icon">{{ loop.index }}</span>
+            <span>
+              <strong>{{ template.title }}</strong>
+              <small>{{ template.description }}</small>
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="dm-table-wrap">
       <table class="dm-table">
         <thead>
