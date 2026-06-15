@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airflow-dag-manager-plugin"
+version = "0.2.0"
+description = "Template-driven DAG Manager UI plugin for Apache Airflow 3.1 and 3.2"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "DAG Manager Team" }
+]
+classifiers = [
+  "Framework :: Apache Airflow",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "apache-airflow>=3.1.2,<3.3",
+  "apache-airflow-providers-postgres>=6.0,<7",
+  "httpx>=0.27,<1",
+  "jinja2>=3.1,<4",
+  "python-multipart>=0.0.9,<1",
+  "psycopg2-binary>=2.9,<3",
+]
+
+[project.entry-points."airflow.plugins"]
+dag_manager = "dag_manager.plugin:DagManagerPlugin"
+
+[project.scripts]
+dag-manager-init-db = "dag_manager.cli:init_db"
+dag-manager-validate-templates = "dag_manager.cli:validate_templates"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "ruff>=0.8,<1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dag_manager*"]
+
+[tool.setuptools.package-data]
+dag_manager = [
+  "ui_templates/*.html",
+  "static/*.css",
+  "static/*.js",
+  "static/*.svg",
+  "templates/*/*.jinja",
+  "templates/*/*.json",
+  "sql/*.sql",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
